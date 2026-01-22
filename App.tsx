@@ -14,14 +14,19 @@ const App: React.FC = () => {
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [loginForm, setLoginForm] = useState({ user: '', pass: '' });
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const fetchedQuizzes = await quizService.getQuizzes();
       setQuizzes(fetchedQuizzes);
       setResults(quizService.getResults());
+    } catch (err) {
+      console.error("Falha ao carregar dados:", err);
+      setError("Não foi possível conectar ao banco de dados local. Tente recarregar a página.");
     } finally {
       setIsLoading(false);
     }
@@ -42,7 +47,6 @@ const App: React.FC = () => {
     quizService.saveResult(result);
     loadData();
     setView('HOME');
-    // Melhorado o feedback visual
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -64,10 +68,26 @@ const App: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-slate-950">
         <div className="text-center">
-          <i className="fas fa-circle-notch fa-spin text-4xl text-indigo-500 mb-4"></i>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Carregando Banco de Dados...</p>
+          <div className="relative w-16 h-16 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
+          </div>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Iniciando Quiz Master AI</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6">
+        <div className="max-w-md text-center bg-slate-900 p-8 rounded-3xl border border-rose-500/30">
+          <i className="fas fa-exclamation-triangle text-rose-500 text-4xl mb-4"></i>
+          <h2 className="text-xl font-bold mb-2">Ops! Algo deu errado</h2>
+          <p className="text-slate-400 text-sm mb-6">{error}</p>
+          <Button onClick={() => window.location.reload()}>Recarregar Aplicativo</Button>
         </div>
       </div>
     );
@@ -76,7 +96,7 @@ const App: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
       {/* Header */}
-      <header className="flex justify-between items-center mb-12">
+      <header className="flex justify-between items-center mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
         <div>
           <h1 
             className="text-2xl font-black text-white cursor-pointer hover:text-indigo-500 transition-colors"
@@ -231,7 +251,7 @@ const App: React.FC = () => {
 
       <footer className="mt-20 pt-12 border-t border-slate-900 text-center">
         <p className="text-sm text-slate-600 font-medium">
-          &copy; 2024 Quiz Master AI. Desenvolvido com Armazenamento Estruturado.
+          &copy; 2024 Quiz Master AI. Desenvolvido com Armazenamento Estruturado Local.
         </p>
       </footer>
     </div>
