@@ -4,7 +4,8 @@ import { Quiz } from "../types";
 
 export const geminiService = {
   generateQuiz: async (topic: string, numQuestions: number = 5): Promise<Partial<Quiz>> => {
-    // Re-initialize for each call to pick up the latest API Key from the dialog/environment
+    // A chave de API deve ser obtida exclusivamente de process.env.API_KEY
+    // O shim no index.tsx garante que este valor esteja disponível mesmo no Vite
     const apiKey = process.env.API_KEY;
     
     if (!apiKey) {
@@ -13,10 +14,10 @@ export const geminiService = {
 
     const ai = new GoogleGenAI({ apiKey });
     
-    // Quiz generation is a complex text reasoning task, using gemini-3-pro-preview
+    // Quiz generation é uma tarefa de raciocínio complexo, usamos gemini-3-pro-preview
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
-      contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter no maximo 20 e no mínimo 5 perguntas de múltipla escolha.`,
+      model: 'gemini-3-flash-preview',
+      contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter no maximo 20 e no mínimo 5 perguntas de múltipla escolha. Retorne em formato JSON estruturado.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -52,8 +53,9 @@ export const geminiService = {
       }
     });
 
-    // Accessing .text directly (it's a property, not a method)
+    // .text é uma propriedade getter que retorna a string do JSON gerado
     const data = JSON.parse(response.text || "{}");
+    
     return {
       ...data,
       questions: (data.questions || []).map((q: any) => ({
