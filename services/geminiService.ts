@@ -8,7 +8,7 @@ export const geminiService = {
   generateQuiz: async (topic: string, numQuestions: number = 5): Promise<Partial<Quiz>> => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter no mínimo 5 e no máximo 30 perguntas de múltipla escolha.`,
+      contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter exatamente ${numQuestions} perguntas de múltipla escolha.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
