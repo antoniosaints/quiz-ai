@@ -1,46 +1,68 @@
 
+import axios from 'axios';
 import { Quiz } from '../types';
-import { sqliteService } from './sqliteService';
+
+const STORAGE_KEY = 'quiz_master_api_url';
+const DEFAULT_URL = 'http://localhost:3001/api';
+
+// Permite obter a URL salva ou usar a padrão
+export const getApiBaseUrl = () => {
+  return localStorage.getItem(STORAGE_KEY) || DEFAULT_URL;
+};
+
+export const setApiBaseUrl = (url: string) => {
+  localStorage.setItem(STORAGE_KEY, url);
+};
+
+const createClient = () => {
+  return axios.create({
+    baseURL: getApiBaseUrl(),
+    timeout: 5000, // 5 segundos de timeout
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+};
 
 export const globalApi = {
+  async checkHealth(): Promise<boolean> {
+    try {
+      const client = createClient();
+      await client.get('/health');
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
   async fetchQuizzes(): Promise<Quiz[]> {
-    const db = await sqliteService.init();
-    const res = db.exec("SELECT * FROM quizzes ORDER BY rowid DESC");
-    
-    if (res.length === 0) return [];
-    
-    const columns = res[0].columns;
-    const values = res[0].values;
-    
-    return values.map((row: any) => {
-      const quiz: any = {};
-      columns.forEach((col, i) => {
-        if (col === 'questions') {
-          quiz[col] = JSON.parse(row[i]);
-        } else {
-          quiz[col] = row[i];
-        }
-      });
-      return quiz as Quiz;
-    });
+    try {
+      const client = createClient();
+      const response = await client.get<Quiz[]>('/quizzes');
+      return response.data;
+    } catch (error: any) {
+      console.error("Erro ao buscar quizzes do servidor:", error.message);
+      throw error;
+    }
   },
 
   async saveQuiz(quiz: Quiz): Promise<void> {
-    const db = await sqliteService.init();
-    const questionsJson = JSON.stringify(quiz.questions);
-    
-    db.run(
-      `INSERT OR REPLACE INTO quizzes (id, title, description, category, questions) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [quiz.id, quiz.title, quiz.description, quiz.category, questionsJson]
-    );
-    
-    await sqliteService.persist();
+    try {
+      const client = createClient();
+      await client.post('/quizzes', quiz);
+    } catch (error: any) {
+      console.error("Erro ao salvar quiz no servidor:", error.message);
+      throw error;
+    }
   },
 
   async deleteQuiz(id: string): Promise<void> {
-    const db = await sqliteService.init();
-    db.run("DELETE FROM quizzes WHERE id = ?", [id]);
-    await sqliteService.persist();
+    try {
+      const client = createClient();
+      await client.delete(`/quizzes/${id}`);
+    } catch (error: any) {
+      console.error("Erro ao deletar quiz no servidor:", error.message);
+      throw error;
+    }
   }
 };

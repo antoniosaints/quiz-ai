@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Quiz, QuizResult } from './types';
 import { quizService } from './services/quizService';
+import { getApiBaseUrl, setApiBaseUrl } from './services/api';
 import { Button } from './components/Button';
 import { QuizCard } from './components/QuizCard';
 import { QuizPlayer } from './components/QuizPlayer';
@@ -15,6 +16,7 @@ const App: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [customApiUrl, setCustomApiUrl] = useState(getApiBaseUrl());
   const [loginForm, setLoginForm] = useState({ user: '', pass: '' });
 
   const loadData = useCallback(async () => {
@@ -25,12 +27,21 @@ const App: React.FC = () => {
       setQuizzes(fetchedQuizzes);
       setResults(quizService.getResults());
     } catch (err: any) {
-      console.error("Falha ao carregar SQLite:", err);
-      setError("Não foi possível carregar o banco de dados SQLite WASM.");
+      console.error("Falha ao conectar com o backend:", err);
+      setError(
+        err.code === 'ERR_NETWORK' 
+        ? "Erro de Rede: O servidor não foi encontrado ou a conexão foi recusada. Verifique se o backend está rodando."
+        : "Erro ao carregar dados: " + (err.message || "Erro desconhecido")
+      );
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  const handleUpdateApiUrl = () => {
+    setApiBaseUrl(customApiUrl);
+    loadData();
+  };
 
   useEffect(() => {
     loadData();
@@ -73,11 +84,11 @@ const App: React.FC = () => {
           <div className="relative w-20 h-20 mx-auto mb-6">
             <div className="absolute inset-0 border-4 border-indigo-500/10 rounded-full"></div>
             <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <i className="fas fa-database text-indigo-500"></i>
+            <div className="absolute inset-0 flex items-center justify-center text-indigo-500">
+               <i className="fas fa-cloud text-xl"></i>
             </div>
           </div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Iniciando SQLite WASM Engine</p>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Sincronizando com o Servidor Central</p>
         </div>
       </div>
     );
@@ -86,11 +97,38 @@ const App: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6">
-        <div className="max-w-md text-center bg-slate-900 p-8 rounded-3xl border border-rose-500/30">
-          <i className="fas fa-exclamation-triangle text-rose-500 text-4xl mb-4"></i>
-          <h2 className="text-xl font-bold mb-2">Erro de Inicialização</h2>
-          <p className="text-slate-400 text-sm mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
+        <div className="max-w-xl w-full text-center bg-slate-900 p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl animate-in zoom-in-95 duration-500">
+          <div className="w-20 h-20 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
+            <i className="fas fa-server text-3xl"></i>
+          </div>
+          <h2 className="text-2xl font-black mb-3">Erro de Conexão</h2>
+          <p className="text-slate-400 text-sm mb-8 leading-relaxed">{error}</p>
+          
+          <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 mb-8 text-left">
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 block">Configuração do Endpoint</label>
+            <div className="flex flex-col md:flex-row gap-2">
+              <input 
+                type="text" 
+                className="flex-1 bg-slate-900 border border-slate-800 p-3 rounded-xl outline-none focus:border-indigo-500 text-sm font-mono text-indigo-400"
+                value={customApiUrl}
+                onChange={(e) => setCustomApiUrl(e.target.value)}
+                placeholder="Ex: http://localhost:3001/api"
+              />
+              <Button onClick={handleUpdateApiUrl} size="sm">ATUALIZAR</Button>
+            </div>
+            <p className="text-[9px] text-slate-600 mt-3 font-medium">
+              * Se estiver usando um túnel (ngrok), insira a URL pública gerada.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Button className="w-full py-4" onClick={() => loadData()}>
+              <i className="fas fa-sync-alt mr-2"></i> TENTAR NOVAMENTE
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setError(null)}>
+              VOLTAR PARA HOME (MODO OFFLINE)
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -107,8 +145,8 @@ const App: React.FC = () => {
             QUIZ<span className="text-indigo-500">MASTER</span>
           </h1>
           <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mt-1 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-            {view === 'HOME' ? 'SQLite Native Engine' : view === 'ADMIN' ? 'SQL Dashboard' : activeQuiz?.title}
+            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-pulse"></span>
+            {view === 'HOME' ? 'Central Database Sync' : view === 'ADMIN' ? 'Admin Dashboard' : activeQuiz?.title}
           </p>
         </div>
         <div className="flex gap-3">
@@ -156,12 +194,13 @@ const App: React.FC = () => {
             <section>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold flex items-center">
-                  <i className="fas fa-layer-group mr-3 text-emerald-500"></i>
-                  Quizzes Disponíveis (SQL)
+                  <i className="fas fa-globe-americas mr-3 text-emerald-500"></i>
+                  Quizzes da Comunidade
                 </h2>
                 <div className="flex gap-2">
-                  <span className="text-[9px] bg-slate-900 border border-slate-800 text-slate-500 px-2 py-1 rounded font-bold uppercase">WASM Core</span>
-                  <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-2 py-1 rounded font-bold uppercase">DB Online</span>
+                  <span className="text-[9px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-2 py-1 rounded font-bold uppercase tracking-tighter">
+                    API: {new URL(getApiBaseUrl()).hostname}
+                  </span>
                 </div>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
@@ -170,7 +209,7 @@ const App: React.FC = () => {
                 ))}
                 {quizzes.length === 0 && (
                   <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-900 rounded-3xl">
-                    <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Aguardando dados da tabela 'quizzes'...</p>
+                    <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Nenhum quiz encontrado no servidor.</p>
                   </div>
                 )}
               </div>
@@ -181,9 +220,9 @@ const App: React.FC = () => {
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-bold flex items-center">
                     <i className="fas fa-history mr-3 text-indigo-500"></i>
-                    Histórico Recente
+                    Seu Histórico (Local)
                   </h2>
-                  <span className="text-[10px] bg-slate-800 text-slate-500 px-2 py-1 rounded font-bold uppercase">LocalStorage Cache</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-500 px-2 py-1 rounded font-bold uppercase">Navegador</span>
                 </div>
                 <div className="space-y-4">
                   {results.map(r => (
@@ -208,14 +247,14 @@ const App: React.FC = () => {
             <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-sm shadow-2xl">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-                  <i className="fas fa-terminal text-2xl"></i>
+                  <i className="fas fa-shield-halved text-2xl"></i>
                 </div>
-                <h2 className="text-xl font-bold">SQL Authentication</h2>
-                <p className="text-sm text-slate-500 mt-1">Acesse as tabelas do sistema</p>
+                <h2 className="text-xl font-bold">Admin Login</h2>
+                <p className="text-sm text-slate-500 mt-1">Gerencie o banco de dados central</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase px-1">DB User</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase px-1">Usuário</label>
                   <input 
                     type="text" 
                     placeholder="admin"
@@ -225,7 +264,7 @@ const App: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase px-1">Secret</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase px-1">Senha</label>
                   <input 
                     type="password" 
                     placeholder="••••••••"
@@ -235,7 +274,7 @@ const App: React.FC = () => {
                   />
                 </div>
                 <Button className="w-full py-4 mt-4" type="submit">
-                  ESTABELECER CONEXÃO
+                  CONECTAR AO PAINEL
                 </Button>
               </form>
             </div>
@@ -259,13 +298,8 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 pt-12 border-t border-slate-900 text-center">
-        <div className="flex justify-center gap-6 mb-4">
-          <i className="fab fa-react text-slate-800 text-xl"></i>
-          <i className="fas fa-database text-slate-800 text-xl"></i>
-          <i className="fab fa-google text-slate-800 text-xl"></i>
-        </div>
         <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">
-          Engine: SQLite v3.45.0 WASM &bull; Logic: Google Gemini 1.3
+          Backend: Node.js/Express &bull; Database: Central SQLite &bull; API: Gemini 3
         </p>
       </footer>
     </div>
