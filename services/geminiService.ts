@@ -4,12 +4,19 @@ import { Quiz } from "../types";
 
 export const geminiService = {
   generateQuiz: async (topic: string, numQuestions: number = 5): Promise<Partial<Quiz>> => {
-    // Inicialização movida para dentro da função para garantir que process.env.API_KEY esteja pronto
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Re-initialize for each call to pick up the latest API Key from the dialog/environment
+    const apiKey = process.env.API_KEY;
     
+    if (!apiKey) {
+      throw new Error("API_KEY_MISSING");
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+    
+    // Quiz generation is a complex text reasoning task, using gemini-3-pro-preview
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter exatamente ${numQuestions} perguntas de múltipla escolha.`,
+      model: 'gemini-3-pro-preview',
+      contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter no maximo 20 e no mínimo 5 perguntas de múltipla escolha.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -45,14 +52,14 @@ export const geminiService = {
       }
     });
 
-    const data = JSON.parse(response.text);
-    // Map to include IDs which types require
+    // Accessing .text directly (it's a property, not a method)
+    const data = JSON.parse(response.text || "{}");
     return {
       ...data,
-      questions: data.questions.map((q: any) => ({
+      questions: (data.questions || []).map((q: any) => ({
         ...q,
         id: Math.random().toString(36).substr(2, 9),
-        options: q.options.map((o: any) => ({
+        options: (q.options || []).map((o: any) => ({
           ...o,
           id: Math.random().toString(36).substr(2, 9)
         }))

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Quiz, Question, Option } from '../types';
+import { Quiz, Question } from '../types';
 import { quizService } from '../services/quizService';
 import { geminiService } from '../services/geminiService';
 import { Button } from './Button';
@@ -8,6 +8,18 @@ import { Button } from './Button';
 interface AdminPanelProps {
   onUpdate: () => void;
   onCancel: () => void;
+}
+
+// Fix: Use AIStudio type to match global declaration
+declare global {
+  interface AIStudio {
+    hasSelectedApiKey: () => Promise<boolean>;
+    openSelectKey: () => Promise<void>;
+  }
+
+  interface Window {
+    aistudio?: AIStudio;
+  }
 }
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate, onCancel }) => {
@@ -78,8 +90,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate, onCancel }) =>
     }));
   };
 
+  // Fix: Improved handleGenerateAI with key selection and race condition handling
   const handleGenerateAI = async () => {
     if (!prompt) return alert('Digite um tema para gerar!');
+
+    // Check for API key selection if AI Studio environment is detected
+    if (window.aistudio) {
+      const hasKey = await window.aistudio.hasSelectedApiKey();
+      if (!hasKey) {
+        alert("Para usar a geração por IA, você precisa selecionar uma chave de API de um projeto com faturamento ativado (GCP).");
+        await window.aistudio.openSelectKey();
+        // Mitigation: Proceed assuming selection was successful
+      }
+    }
+
     setIsGenerating(true);
     try {
       const generated = await geminiService.generateQuiz(prompt);
@@ -87,9 +111,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onUpdate, onCancel }) =>
         ...generated,
         id: Math.random().toString(36).substr(2, 9)
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert('Erro ao gerar quiz. Tente novamente.');
+      const errorMessage = error.message || "";
+      
+      // Handle special case where key might have been reset or is invalid
+      if (errorMessage.includes("Requested entity was not found.")) {
+        if (window.aistudio) {
+          alert("Sua chave de API parece ter expirado ou é inválida. Por favor, selecione-a novamente.");
+          await window.aistudio.openSelectKey();
+          return;
+        }
+      }
+
+      // Handle missing API Key error
+      if (errorMessage === "API_KEY_MISSING" || errorMessage.includes("API Key")) {
+        if (window.aistudio) {
+          await window.aistudio.openSelectKey();
+          return;
+        }
+        alert('Chave de API não configurada no ambiente. Verifique suas configurações.');
+      } else {
+        alert('Erro ao gerar quiz. Verifique sua conexão ou tente um tema diferente.');
+      }
     } finally {
       setIsGenerating(false);
     }
