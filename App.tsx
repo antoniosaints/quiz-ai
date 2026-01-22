@@ -24,9 +24,9 @@ const App: React.FC = () => {
       const fetchedQuizzes = await quizService.getQuizzes();
       setQuizzes(fetchedQuizzes);
       setResults(quizService.getResults());
-    } catch (err) {
-      console.error("Falha ao carregar dados do banco global:", err);
-      setError("Não foi possível conectar ao banco de dados global. Verifique sua conexão.");
+    } catch (err: any) {
+      console.error("Falha ao carregar SQLite:", err);
+      setError("Não foi possível carregar o banco de dados SQLite WASM.");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +45,6 @@ const App: React.FC = () => {
 
   const handleFinishQuiz = (result: QuizResult) => {
     quizService.saveResult(result);
-    // Recarrega apenas resultados para manter performance
     setResults(quizService.getResults());
     setView('HOME');
   };
@@ -71,11 +70,14 @@ const App: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
         <div className="text-center">
-          <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-t-emerald-500 rounded-full animate-spin"></div>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-indigo-500/10 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <i className="fas fa-database text-indigo-500"></i>
+            </div>
           </div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Conectando ao Banco Global SQLite</p>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] animate-pulse">Iniciando SQLite WASM Engine</p>
         </div>
       </div>
     );
@@ -85,10 +87,10 @@ const App: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6">
         <div className="max-w-md text-center bg-slate-900 p-8 rounded-3xl border border-rose-500/30">
-          <i className="fas fa-database text-rose-500 text-4xl mb-4"></i>
-          <h2 className="text-xl font-bold mb-2">Erro de Conexão</h2>
+          <i className="fas fa-exclamation-triangle text-rose-500 text-4xl mb-4"></i>
+          <h2 className="text-xl font-bold mb-2">Erro de Inicialização</h2>
           <p className="text-slate-400 text-sm mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()}>Tentar Reconectar</Button>
+          <Button onClick={() => window.location.reload()}>Tentar Novamente</Button>
         </div>
       </div>
     );
@@ -96,7 +98,6 @@ const App: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
-      {/* Header */}
       <header className="flex justify-between items-center mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
         <div>
           <h1 
@@ -105,8 +106,9 @@ const App: React.FC = () => {
           >
             QUIZ<span className="text-indigo-500">MASTER</span>
           </h1>
-          <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">
-            {view === 'HOME' ? 'Dashboard Global' : view === 'ADMIN' ? 'Gestor de Conteúdo' : activeQuiz?.title}
+          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-black mt-1 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+            {view === 'HOME' ? 'SQLite Native Engine' : view === 'ADMIN' ? 'SQL Dashboard' : activeQuiz?.title}
           </p>
         </div>
         <div className="flex gap-3">
@@ -148,17 +150,19 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Views */}
       <main>
         {view === 'HOME' && (
           <div className="space-y-12 animate-in fade-in duration-500">
             <section>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold flex items-center">
-                  <i className="fas fa-globe-americas mr-3 text-emerald-500"></i>
-                  Quizzes da Comunidade
+                  <i className="fas fa-layer-group mr-3 text-emerald-500"></i>
+                  Quizzes Disponíveis (SQL)
                 </h2>
-                <span className="text-[10px] text-slate-600 font-black uppercase border border-slate-800 px-2 py-1 rounded">SQLite Global Mode</span>
+                <div className="flex gap-2">
+                  <span className="text-[9px] bg-slate-900 border border-slate-800 text-slate-500 px-2 py-1 rounded font-bold uppercase">WASM Core</span>
+                  <span className="text-[9px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 px-2 py-1 rounded font-bold uppercase">DB Online</span>
+                </div>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
                 {quizzes.map(q => (
@@ -166,7 +170,7 @@ const App: React.FC = () => {
                 ))}
                 {quizzes.length === 0 && (
                   <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-900 rounded-3xl">
-                    <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Aguardando novos conteúdos globais...</p>
+                    <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Aguardando dados da tabela 'quizzes'...</p>
                   </div>
                 )}
               </div>
@@ -176,10 +180,10 @@ const App: React.FC = () => {
               <section className="bg-slate-900/50 rounded-3xl p-8 border border-slate-800">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-bold flex items-center">
-                    <i className="fas fa-user-circle mr-3 text-indigo-500"></i>
-                    Meu Desempenho Local
+                    <i className="fas fa-history mr-3 text-indigo-500"></i>
+                    Histórico Recente
                   </h2>
-                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded font-bold uppercase">Armazenamento Privado</span>
+                  <span className="text-[10px] bg-slate-800 text-slate-500 px-2 py-1 rounded font-bold uppercase">LocalStorage Cache</span>
                 </div>
                 <div className="space-y-4">
                   {results.map(r => (
@@ -190,7 +194,6 @@ const App: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-black text-indigo-400">{r.score}/{r.total}</p>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Acertos</p>
                       </div>
                     </div>
                   ))}
@@ -205,14 +208,14 @@ const App: React.FC = () => {
             <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-sm shadow-2xl">
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-                  <i className="fas fa-shield-halved text-2xl"></i>
+                  <i className="fas fa-terminal text-2xl"></i>
                 </div>
-                <h2 className="text-xl font-bold">Acesso Administrador</h2>
-                <p className="text-sm text-slate-500 mt-1">Gerencie o banco de dados central</p>
+                <h2 className="text-xl font-bold">SQL Authentication</h2>
+                <p className="text-sm text-slate-500 mt-1">Acesse as tabelas do sistema</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase px-1">Usuário</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase px-1">DB User</label>
                   <input 
                     type="text" 
                     placeholder="admin"
@@ -222,7 +225,7 @@ const App: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase px-1">Senha</label>
+                  <label className="text-xs font-bold text-slate-500 uppercase px-1">Secret</label>
                   <input 
                     type="password" 
                     placeholder="••••••••"
@@ -232,7 +235,7 @@ const App: React.FC = () => {
                   />
                 </div>
                 <Button className="w-full py-4 mt-4" type="submit">
-                  AUTENTICAR NO PAINEL
+                  ESTABELECER CONEXÃO
                 </Button>
               </form>
             </div>
@@ -256,8 +259,13 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 pt-12 border-t border-slate-900 text-center">
-        <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">
-          Arquitetura Híbrida: SQLite Global Content &bull; LocalStorage Personal History
+        <div className="flex justify-center gap-6 mb-4">
+          <i className="fab fa-react text-slate-800 text-xl"></i>
+          <i className="fas fa-database text-slate-800 text-xl"></i>
+          <i className="fab fa-google text-slate-800 text-xl"></i>
+        </div>
+        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">
+          Engine: SQLite v3.45.0 WASM &bull; Logic: Google Gemini 1.3
         </p>
       </footer>
     </div>
