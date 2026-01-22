@@ -11,13 +11,20 @@ export const QuizCard: React.FC<QuizCardProps> = ({ quiz, onClick }) => {
   return (
     <div 
       onClick={() => onClick(quiz)}
-      className="group bg-slate-900 border border-slate-800 p-6 rounded-2xl cursor-pointer hover:bg-slate-800/80 hover:border-indigo-500/50 transition-all duration-300"
+      className="group bg-slate-900 border border-slate-800 p-6 rounded-2xl cursor-pointer hover:bg-slate-800/80 hover:border-indigo-500/50 transition-all duration-300 relative overflow-hidden"
     >
+      {/* Indicador de Banco Global */}
+      <div className="absolute top-0 right-0 p-2">
+        <div className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 border border-emerald-500/20">
+          <i className="fas fa-database text-[6px]"></i> GLOBAL DB
+        </div>
+      </div>
+
       <div className="flex justify-between items-start mb-3">
         <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">
           {quiz.category}
         </span>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 pr-12">
           {quiz.questions.length} Questões
         </span>
       </div>

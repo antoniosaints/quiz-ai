@@ -25,8 +25,8 @@ const App: React.FC = () => {
       setQuizzes(fetchedQuizzes);
       setResults(quizService.getResults());
     } catch (err) {
-      console.error("Falha ao carregar dados:", err);
-      setError("Não foi possível conectar ao banco de dados local. Tente recarregar a página.");
+      console.error("Falha ao carregar dados do banco global:", err);
+      setError("Não foi possível conectar ao banco de dados global. Verifique sua conexão.");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +45,8 @@ const App: React.FC = () => {
 
   const handleFinishQuiz = (result: QuizResult) => {
     quizService.saveResult(result);
-    loadData();
+    // Recarrega apenas resultados para manter performance
+    setResults(quizService.getResults());
     setView('HOME');
   };
 
@@ -71,10 +72,10 @@ const App: React.FC = () => {
       <div className="flex items-center justify-center min-h-screen bg-slate-950">
         <div className="text-center">
           <div className="relative w-16 h-16 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 border-4 border-emerald-500/10 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-t-emerald-500 rounded-full animate-spin"></div>
           </div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Iniciando Quiz Master AI</p>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Conectando ao Banco Global SQLite</p>
         </div>
       </div>
     );
@@ -84,10 +85,10 @@ const App: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6">
         <div className="max-w-md text-center bg-slate-900 p-8 rounded-3xl border border-rose-500/30">
-          <i className="fas fa-exclamation-triangle text-rose-500 text-4xl mb-4"></i>
-          <h2 className="text-xl font-bold mb-2">Ops! Algo deu errado</h2>
+          <i className="fas fa-database text-rose-500 text-4xl mb-4"></i>
+          <h2 className="text-xl font-bold mb-2">Erro de Conexão</h2>
           <p className="text-slate-400 text-sm mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()}>Recarregar Aplicativo</Button>
+          <Button onClick={() => window.location.reload()}>Tentar Reconectar</Button>
         </div>
       </div>
     );
@@ -105,7 +106,7 @@ const App: React.FC = () => {
             QUIZ<span className="text-indigo-500">MASTER</span>
           </h1>
           <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">
-            {view === 'HOME' ? 'Dashboard' : view === 'ADMIN' ? 'Painel de Controle' : activeQuiz?.title}
+            {view === 'HOME' ? 'Dashboard Global' : view === 'ADMIN' ? 'Gestor de Conteúdo' : activeQuiz?.title}
           </p>
         </div>
         <div className="flex gap-3">
@@ -154,34 +155,42 @@ const App: React.FC = () => {
             <section>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold flex items-center">
-                  <i className="fas fa-layer-group mr-3 text-indigo-500"></i>
-                  Quizzes Disponíveis
+                  <i className="fas fa-globe-americas mr-3 text-emerald-500"></i>
+                  Quizzes da Comunidade
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">{quizzes.length} disponíveis</span>
+                <span className="text-[10px] text-slate-600 font-black uppercase border border-slate-800 px-2 py-1 rounded">SQLite Global Mode</span>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
                 {quizzes.map(q => (
                   <QuizCard key={q.id} quiz={q} onClick={handleStartQuiz} />
                 ))}
+                {quizzes.length === 0 && (
+                  <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-900 rounded-3xl">
+                    <p className="text-slate-600 font-bold uppercase tracking-widest text-xs">Aguardando novos conteúdos globais...</p>
+                  </div>
+                )}
               </div>
             </section>
 
             {results.length > 0 && (
               <section className="bg-slate-900/50 rounded-3xl p-8 border border-slate-800">
-                <h2 className="text-lg font-bold mb-6 flex items-center">
-                  <i className="fas fa-history mr-3 text-indigo-500"></i>
-                  Histórico de Desempenho
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-bold flex items-center">
+                    <i className="fas fa-user-circle mr-3 text-indigo-500"></i>
+                    Meu Desempenho Local
+                  </h2>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded font-bold uppercase">Armazenamento Privado</span>
+                </div>
                 <div className="space-y-4">
                   {results.map(r => (
-                    <div key={r.id} className="flex justify-between items-center p-4 bg-slate-900 border border-slate-800 rounded-xl">
+                    <div key={r.id} className="flex justify-between items-center p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-indigo-500/30 transition-colors">
                       <div>
                         <p className="font-bold text-slate-100">{r.quizTitle}</p>
                         <p className="text-xs text-slate-500">{r.date}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-black text-indigo-400">{r.score}/{r.total}</p>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Nota Final</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Acertos</p>
                       </div>
                     </div>
                   ))}
@@ -193,20 +202,20 @@ const App: React.FC = () => {
 
         {view === 'LOGIN' && (
           <div className="flex flex-col items-center justify-center py-20 animate-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-sm">
+            <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-sm shadow-2xl">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
                   <i className="fas fa-shield-halved text-2xl"></i>
                 </div>
-                <h2 className="text-xl font-bold">Acesso Restrito</h2>
-                <p className="text-sm text-slate-500 mt-1">Identifique-se para gerenciar quizzes</p>
+                <h2 className="text-xl font-bold">Acesso Administrador</h2>
+                <p className="text-sm text-slate-500 mt-1">Gerencie o banco de dados central</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase px-1">Usuário</label>
                   <input 
                     type="text" 
-                    placeholder="Seu usuário"
+                    placeholder="admin"
                     className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none p-3 rounded-xl transition-all"
                     value={loginForm.user}
                     onChange={e => setLoginForm(prev => ({ ...prev, user: e.target.value }))}
@@ -223,11 +232,8 @@ const App: React.FC = () => {
                   />
                 </div>
                 <Button className="w-full py-4 mt-4" type="submit">
-                  ENTRAR NO PAINEL
+                  AUTENTICAR NO PAINEL
                 </Button>
-                <p className="text-[10px] text-center text-slate-600 uppercase font-bold tracking-widest mt-6">
-                  Credenciais padrão: admin / admin
-                </p>
               </form>
             </div>
           </div>
@@ -250,8 +256,8 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 pt-12 border-t border-slate-900 text-center">
-        <p className="text-sm text-slate-600 font-medium">
-          &copy; 2024 Quiz Master AI. Desenvolvido com Armazenamento Estruturado Local.
+        <p className="text-xs text-slate-600 font-bold uppercase tracking-widest">
+          Arquitetura Híbrida: SQLite Global Content &bull; LocalStorage Personal History
         </p>
       </footer>
     </div>

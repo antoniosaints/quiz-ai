@@ -1,41 +1,31 @@
 
 import { Quiz, QuizResult } from '../types';
-import { dbService } from './db';
+import { globalApi } from './api';
 
-const RESULT_KEY = 'quiz_master_results';
-
-const INITIAL_QUIZZES: Quiz[] = [
-
-];
+const RESULT_KEY = 'quiz_master_local_results';
 
 export const quizService = {
+  // Busca do "Banco de Dados Global"
   async getQuizzes(): Promise<Quiz[]> {
-    let quizzes = await dbService.getAllQuizzes();
-    
-    // Seed inicial se o banco estiver vazio
-    if (quizzes.length === 0) {
-      for (const q of INITIAL_QUIZZES) {
-        await dbService.saveQuiz(q);
-      }
-      quizzes = await dbService.getAllQuizzes();
-    }
-    
-    return quizzes;
+    return await globalApi.fetchQuizzes();
   },
 
+  // Salva no "Banco de Dados Global"
   async saveQuiz(quiz: Quiz): Promise<void> {
-    await dbService.saveQuiz(quiz);
+    await globalApi.saveQuiz(quiz);
   },
 
+  // Remove do "Banco de Dados Global"
   async deleteQuiz(id: string): Promise<void> {
-    await dbService.deleteQuiz(id);
+    await globalApi.deleteQuiz(id);
   },
 
-  // Mantido em LocalStorage conforme solicitado
+  // Mantém resultados estritamente LOCAL (LocalStorage)
   saveResult(result: QuizResult): void {
     const results = this.getResults();
     results.unshift(result);
-    localStorage.setItem(RESULT_KEY, JSON.stringify(results.slice(0, 20)));
+    // Mantém apenas os últimos 50 resultados localmente
+    localStorage.setItem(RESULT_KEY, JSON.stringify(results.slice(0, 50)));
   },
 
   getResults(): QuizResult[] {
