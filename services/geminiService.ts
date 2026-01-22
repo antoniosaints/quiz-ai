@@ -2,10 +2,11 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Quiz } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const geminiService = {
   generateQuiz: async (topic: string, numQuestions: number = 5): Promise<Partial<Quiz>> => {
+    // Inicialização movida para dentro da função para garantir que process.env.API_KEY esteja pronto
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Gere um quiz em Português sobre o tema: "${topic}". O quiz deve ter exatamente ${numQuestions} perguntas de múltipla escolha.`,
