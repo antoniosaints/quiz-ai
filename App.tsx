@@ -24,22 +24,9 @@ const App: React.FC = () => {
       const fetchedQuizzes = await quizService.getQuizzes();
       setQuizzes(fetchedQuizzes);
       setResults(quizService.getResults());
-
-      // Checa se o link compartilhado contém um quizId
-      const params = new URLSearchParams(window.location.search);
-      const sharedId = params.get('quizId');
-      if (sharedId) {
-        const sharedQuiz = fetchedQuizzes.find(q => q.id === sharedId);
-        if (sharedQuiz) {
-          setActiveQuiz(sharedQuiz);
-          setView('QUIZ_PLAYER');
-          // Limpa a URL para não reabrir ao atualizar
-          window.history.replaceState({}, '', window.location.pathname);
-        }
-      }
     } catch (err) {
       console.error("Falha ao carregar dados:", err);
-      setError("Não foi possível conectar ao servidor SQLite. Verifique se o backend está rodando.");
+      setError("Não foi possível conectar ao banco de dados local. Tente recarregar a página.");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +74,7 @@ const App: React.FC = () => {
             <div className="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
             <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin"></div>
           </div>
-          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Conectando ao SQLite Central</p>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Iniciando Quiz Master AI</p>
         </div>
       </div>
     );
@@ -96,11 +83,11 @@ const App: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-950 p-6">
-        <div className="max-w-md text-center bg-slate-900 p-8 rounded-3xl border border-rose-500/30 shadow-2xl">
-          <i className="fas fa-server text-rose-500 text-4xl mb-4"></i>
-          <h2 className="text-xl font-bold mb-2 text-white">Erro de Banco de Dados</h2>
+        <div className="max-w-md text-center bg-slate-900 p-8 rounded-3xl border border-rose-500/30">
+          <i className="fas fa-exclamation-triangle text-rose-500 text-4xl mb-4"></i>
+          <h2 className="text-xl font-bold mb-2">Ops! Algo deu errado</h2>
           <p className="text-slate-400 text-sm mb-6">{error}</p>
-          <Button onClick={() => window.location.reload()}>Tentar Reconectar</Button>
+          <Button onClick={() => window.location.reload()}>Recarregar Aplicativo</Button>
         </div>
       </div>
     );
@@ -108,6 +95,7 @@ const App: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 md:py-12">
+      {/* Header */}
       <header className="flex justify-between items-center mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
         <div>
           <h1 
@@ -116,12 +104,9 @@ const App: React.FC = () => {
           >
             QUIZ<span className="text-indigo-500">MASTER</span>
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-              SQLite Cloud Link Active
-            </p>
-          </div>
+          <p className="text-xs text-slate-500 uppercase tracking-widest font-bold mt-1">
+            {view === 'HOME' ? 'Dashboard' : view === 'ADMIN' ? 'Painel de Controle' : activeQuiz?.title}
+          </p>
         </div>
         <div className="flex gap-3">
           <Button 
@@ -162,26 +147,22 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* Views */}
       <main>
         {view === 'HOME' && (
           <div className="space-y-12 animate-in fade-in duration-500">
             <section>
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold flex items-center">
-                  <i className="fas fa-database mr-3 text-indigo-500"></i>
-                  Quizzes no SQLite Central
+                  <i className="fas fa-layer-group mr-3 text-indigo-500"></i>
+                  Quizzes Disponíveis
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">{quizzes.length} itens sincronizados</span>
+                <span className="text-xs text-slate-500 font-medium">{quizzes.length} disponíveis</span>
               </div>
               <div className="grid gap-6 md:grid-cols-2">
                 {quizzes.map(q => (
                   <QuizCard key={q.id} quiz={q} onClick={handleStartQuiz} />
                 ))}
-                {quizzes.length === 0 && (
-                  <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl">
-                    <p className="text-slate-500">Nenhum quiz no banco de dados. Use o painel admin para criar!</p>
-                  </div>
-                )}
               </div>
             </section>
 
@@ -189,7 +170,7 @@ const App: React.FC = () => {
               <section className="bg-slate-900/50 rounded-3xl p-8 border border-slate-800">
                 <h2 className="text-lg font-bold mb-6 flex items-center">
                   <i className="fas fa-history mr-3 text-indigo-500"></i>
-                  Seu Histórico Local
+                  Histórico de Desempenho
                 </h2>
                 <div className="space-y-4">
                   {results.map(r => (
@@ -200,6 +181,7 @@ const App: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-black text-indigo-400">{r.score}/{r.total}</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tighter">Nota Final</p>
                       </div>
                     </div>
                   ))}
@@ -211,20 +193,20 @@ const App: React.FC = () => {
 
         {view === 'LOGIN' && (
           <div className="flex flex-col items-center justify-center py-20 animate-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-sm shadow-xl">
+            <div className="bg-slate-900 p-8 rounded-3xl border border-slate-800 w-full max-w-sm">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-                  <i className="fas fa-user-shield text-2xl"></i>
+                <div className="w-16 h-16 bg-indigo-500/10 text-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-shield-halved text-2xl"></i>
                 </div>
-                <h2 className="text-xl font-bold">Acesso Administrador</h2>
-                <p className="text-sm text-slate-500 mt-1">Gerencie o banco de dados SQLite</p>
+                <h2 className="text-xl font-bold">Acesso Restrito</h2>
+                <p className="text-sm text-slate-500 mt-1">Identifique-se para gerenciar quizzes</p>
               </div>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase px-1">Usuário</label>
                   <input 
                     type="text" 
-                    placeholder="admin"
+                    placeholder="Seu usuário"
                     className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none p-3 rounded-xl transition-all"
                     value={loginForm.user}
                     onChange={e => setLoginForm(prev => ({ ...prev, user: e.target.value }))}
@@ -241,8 +223,11 @@ const App: React.FC = () => {
                   />
                 </div>
                 <Button className="w-full py-4 mt-4" type="submit">
-                  ACESSAR BANCO DE DADOS
+                  ENTRAR NO PAINEL
                 </Button>
+                <p className="text-[10px] text-center text-slate-600 uppercase font-bold tracking-widest mt-6">
+                  Credenciais padrão: admin / admin
+                </p>
               </form>
             </div>
           </div>
@@ -265,8 +250,8 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 pt-12 border-t border-slate-900 text-center">
-        <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">
-          Engine: Node.js + SQLite3 &bull; AI Core: Gemini 3 Flash
+        <p className="text-sm text-slate-600 font-medium">
+          &copy; 2024 Quiz Master AI. Desenvolvido com Armazenamento Estruturado Local.
         </p>
       </footer>
     </div>
