@@ -1,7 +1,7 @@
 
 import { Quiz } from '../types';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = process.env.API_BASE + '/api';
 
 export const globalApi = {
   async fetchQuizzes(): Promise<Quiz[]> {
