@@ -1,7 +1,7 @@
 
 import { Quiz } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE + '/api';
+const API_BASE = process.env.API_BASE + '/api';
 
 export const globalApi = {
   async fetchQuizzes(): Promise<Quiz[]> {
