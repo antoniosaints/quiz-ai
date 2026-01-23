@@ -1,35 +1,28 @@
 
 import { Quiz, QuizResult } from '../types';
-import { dbService } from './db';
+import { globalApi } from './api';
 
 const RESULT_KEY = 'quiz_master_results';
 
-const INITIAL_QUIZZES: Quiz[] = [];
-
 export const quizService = {
   async getQuizzes(): Promise<Quiz[]> {
-    let quizzes = await dbService.getAllQuizzes();
-    
-    // Seed inicial se o banco estiver vazio
-    if (quizzes.length === 0) {
-      for (const q of INITIAL_QUIZZES) {
-        await dbService.saveQuiz(q);
-      }
-      quizzes = await dbService.getAllQuizzes();
+    try {
+      return await globalApi.fetchQuizzes();
+    } catch (error) {
+      console.warn("Servidor offline, os quizzes não puderam ser carregados.");
+      return [];
     }
-    
-    return quizzes;
   },
 
   async saveQuiz(quiz: Quiz): Promise<void> {
-    await dbService.saveQuiz(quiz);
+    await globalApi.saveQuiz(quiz);
   },
 
   async deleteQuiz(id: string): Promise<void> {
-    await dbService.deleteQuiz(id);
+    await globalApi.deleteQuiz(id);
   },
 
-  // Mantido em LocalStorage conforme solicitado
+  // Os resultados continuam locais para privacidade do usuário
   saveResult(result: QuizResult): void {
     const results = this.getResults();
     results.unshift(result);
