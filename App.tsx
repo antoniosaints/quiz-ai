@@ -161,14 +161,12 @@ const App: React.FC = () => {
             }`}
             onClick={() => !isSharedMode && setView("HOME")}
           >
-            QUIZ<span className="text-indigo-500">MASTER</span>
+            QUIZ<span className="text-indigo-500">AI</span>
           </h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
             <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-              {isSharedMode
-                ? "Sessão Compartilhada"
-                : "SQLite Cloud Link Active"}
+              {isSharedMode ? "Sessão Compartilhada" : "Conectado ao Banco"}
             </p>
           </div>
         </div>
@@ -218,44 +216,67 @@ const App: React.FC = () => {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-lg font-bold flex items-center">
                   <i className="fas fa-database mr-3 text-indigo-500"></i>
-                  Quizzes no SQLite Central
+                  Quizzes compartilhados
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">
-                  {filteredQuizzes.length} itens {searchTerm && "(filtrado)"}
-                </span>
-              </div>
-
-              <div className="mb-8 max-w-md">
-                <SearchInput
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  placeholder="Buscar por título, categoria..."
-                />
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                {currentQuizzes.map((q) => (
-                  <QuizCard key={q.id} quiz={q} onClick={handleStartQuiz} />
-                ))}
-                {currentQuizzes.length === 0 && (
-                  <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl">
-                    <p className="text-slate-500">
-                      {searchTerm
-                        ? "Nenhum quiz encontrado para sua busca."
-                        : "Nenhum quiz no banco de dados."}
-                    </p>
-                  </div>
+                {isAdmin && (
+                  <span className="text-xs text-slate-500 font-medium">
+                    {filteredQuizzes.length} itens {searchTerm && "(filtrado)"}
+                  </span>
                 )}
               </div>
 
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
+              {!isAdmin ? (
+                <div className="text-center py-20 border-2 border-dashed border-slate-800 rounded-3xl bg-slate-900/30">
+                  <div className="w-16 h-16 bg-slate-800 text-slate-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i className="fas fa-lock text-2xl"></i>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-2">
+                    Acesso Restrito
+                  </h3>
+                  <p className="text-slate-500 max-w-sm mx-auto mb-6">
+                    A listagem pública de quizzes está desabilitada. Faça login
+                    como administrador para ver todos os itens ou use um link
+                    direto.
+                  </p>
+                  <Button onClick={() => setView("LOGIN")} variant="primary">
+                    <i className="fas fa-key mr-2"></i> Área Administrativa
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-8 max-w-md">
+                    <SearchInput
+                      value={searchTerm}
+                      onChange={handleSearchChange}
+                      placeholder="Buscar por título, categoria..."
+                    />
+                  </div>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {currentQuizzes.map((q) => (
+                      <QuizCard key={q.id} quiz={q} onClick={handleStartQuiz} />
+                    ))}
+                    {currentQuizzes.length === 0 && (
+                      <div className="col-span-full py-20 text-center border-2 border-dashed border-slate-800 rounded-3xl">
+                        <p className="text-slate-500">
+                          {searchTerm
+                            ? "Nenhum quiz encontrado para sua busca."
+                            : "Nenhum quiz no banco de dados."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </>
+              )}
             </section>
 
-            {results.length > 0 && (
+            {isAdmin && results.length > 0 && (
               <section className="bg-slate-900/50 rounded-3xl p-8 border border-slate-800">
                 <h2 className="text-lg font-bold mb-6 flex items-center">
                   <i className="fas fa-history mr-3 text-indigo-500"></i>
