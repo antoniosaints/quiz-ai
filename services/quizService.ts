@@ -4,26 +4,7 @@ import { dbService } from './db';
 
 const RESULT_KEY = 'quiz_master_results';
 
-const INITIAL_QUIZZES: Quiz[] = [
-  {
-    id: '1',
-    title: 'Fundamentos de React',
-    description: 'Teste seus conhecimentos básicos sobre o ecossistema React.',
-    category: 'Tecnologia',
-    questions: [
-      {
-        id: 'q1',
-        text: 'Qual hook é usado para gerenciar estado em componentes funcionais?',
-        options: [
-          { id: 'o1', text: 'useEffect', isCorrect: false },
-          { id: 'o2', text: 'useState', isCorrect: true },
-          { id: 'o3', text: 'useContext', isCorrect: false },
-          { id: 'o4', text: 'useReducer', isCorrect: false }
-        ]
-      }
-    ]
-  }
-];
+const INITIAL_QUIZZES: Quiz[] = [];
 
 export const quizService = {
   async getQuizzes(): Promise<Quiz[]> {
