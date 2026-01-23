@@ -1,4 +1,3 @@
-
 export interface Option {
   id: string;
   text: string;
@@ -17,6 +16,7 @@ export interface Quiz {
   description: string;
   questions: Question[];
   category: string;
+  timeLimit?: number; // em minutos
 }
 
 export interface QuizResult {
@@ -28,4 +28,9 @@ export interface QuizResult {
   date: string;
 }
 
-export type View = 'HOME' | 'QUIZ_PLAYER' | 'ADMIN' | 'LOGIN' | 'RESULT_SUMMARY';
+export type View =
+  | "HOME"
+  | "QUIZ_PLAYER"
+  | "ADMIN"
+  | "LOGIN"
+  | "RESULT_SUMMARY";
