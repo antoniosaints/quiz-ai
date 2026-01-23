@@ -19,6 +19,9 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
   const [answers, setAnswers] = useState<(string | null)[]>([]);
   const [result, setResult] = useState<QuizResult | null>(null);
 
+  // New State: Has the quiz started?
+  const [hasStarted, setHasStarted] = useState(false);
+
   // Timer State (in seconds)
   const [timeLeft, setTimeLeft] = useState<number | null>(
     quiz.timeLimit ? quiz.timeLimit * 60 : null
@@ -40,7 +43,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
 
   // Timer Effect
   useEffect(() => {
-    if (timeLeft === null || result) return;
+    if (!hasStarted || timeLeft === null || result) return;
 
     if (timeLeft === 0) {
       finishQuiz();
@@ -52,15 +55,14 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeLeft, result]);
+  }, [timeLeft, result, hasStarted]);
 
-  // Anti-Cheat Effect
+  // Anti-Cheat (Visibility)
   useEffect(() => {
-    if (result) return;
+    if (!hasStarted || result) return;
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Penalty: Skip current question (mark as PENALTY)
         alert(
           "⚠️ Mudança de aba detectada! A pergunta foi pulada como penalidade."
         );
@@ -80,37 +82,39 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [currentIdx, shuffledQuestions, result, answers]);
+  }, [currentIdx, shuffledQuestions, result, answers, hasStarted]);
 
-  // Mouse Leave Effect
+  // Anti-Cheat (Mouse Leave)
   useEffect(() => {
-    if (result) return;
+    if (!hasStarted || result) return;
 
-    const handleMouseLeave = () => {
-      // User asked to warn and confirm before penalizing
-      // However, mouseleave is instant. We can use a confirm dialog blocking the thread.
-      // If they confirm "Yes I want to leave/stay out", we penalize?
-      // Or maybe "Warning: You are leaving the quiz area. If you continue, you will be penalized."
+    const handleMouseLeave = (e: MouseEvent) => {
+      // Check if mouse actually left the window (relatedTarget is null)
+      if (e.relatedTarget === null) {
+        // Warning first? User requested: "informe que caso o foco da tela seja perdido, o usuario perde a questão por penalização"
+        // The requirement says: "agora vamos implementar a tela de aviso antes do quiz iniciar"
+        // And previously: "avise o usuario, caso ele confirme que quer sair, penalize"
 
-      const confirmed = window.alert(
-        "⚠️ ALERTA DE FOCO ⚠️\n\nVocê tirou o mouse da janela do quiz. Isso é considerado suspeito.\n\nPor motivos de didática, a pergunta será penalizada."
-      );
+        const confirmed = window.alert(
+          "⚠️ ALERTA DE FOCO ⚠️\n\nVocê tirou o mouse da janela do quiz. Isso é considerado suspeito.\n\nPor motivos de didática, a pergunta será penalizada."
+        );
 
-      const newAnswers = [...answers];
-      newAnswers[currentIdx] = "PENALTY";
-      setAnswers(newAnswers);
+        const newAnswers = [...answers];
+        newAnswers[currentIdx] = "PENALTY";
+        setAnswers(newAnswers);
 
-      if (currentIdx < shuffledQuestions.length - 1) {
-        setCurrentIdx((prev) => prev + 1);
-      } else {
-        finishQuiz();
+        if (currentIdx < shuffledQuestions.length - 1) {
+          setCurrentIdx((prev) => prev + 1);
+        } else {
+          finishQuiz();
+        }
       }
     };
 
     document.body.addEventListener("mouseleave", handleMouseLeave);
     return () =>
       document.body.removeEventListener("mouseleave", handleMouseLeave);
-  }, [currentIdx, shuffledQuestions, result, answers]);
+  }, [currentIdx, shuffledQuestions, result, answers, hasStarted]);
 
   const handleSelect = (optionId: string) => {
     const newAnswers = [...answers];
@@ -248,6 +252,68 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
               } ml-2`}
             ></i>
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Pre-Quiz Warning Modal
+  if (!hasStarted) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+              <i className="fas fa-exclamation-triangle text-2xl animate-pulse"></i>
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">
+              Regras de Anti-Cheat
+            </h2>
+            <p className="text-slate-400 text-sm">
+              Para garantir a integridade do quiz, implementamos algumas regras
+              de segurança.
+            </p>
+          </div>
+
+          <div className="space-y-4 mb-8">
+            <div className="flex gap-4 items-start bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <i className="fas fa-eye text-indigo-500 mt-1"></i>
+              <div>
+                <h4 className="font-bold text-slate-200 text-sm">
+                  Foco na Janela
+                </h4>
+                <p className="text-xs text-slate-500 mt-1">
+                  Se você <strong>mudar de aba</strong> ou{" "}
+                  <strong>minimizar</strong>, a questão atual será pulada como
+                  penalidade.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4 items-start bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <i className="fas fa-mouse-pointer text-indigo-500 mt-1"></i>
+              <div>
+                <h4 className="font-bold text-slate-200 text-sm">
+                  Cursor na Tela
+                </h4>
+                <p className="text-xs text-slate-500 mt-1">
+                  Se você <strong>tirar o mouse</strong> da área do quiz, você
+                  receberá um alerta e poderá ser penalizado.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              className="w-full py-4 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+              onClick={() => setHasStarted(true)}
+            >
+              ENTENDI, INICIAR QUIZ
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={onCancel}>
+              Cancelar
+            </Button>
+          </div>
         </div>
       </div>
     );
