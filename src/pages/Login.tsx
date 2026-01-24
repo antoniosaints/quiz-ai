@@ -10,11 +10,11 @@ export const Login: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginForm.user === "admin" && loginForm.pass === "admin") {
+    if (loginForm.user === "admin" && loginForm.pass === "r5t6y7u8i9") {
       login();
       navigate("/admin");
     } else {
-      alert("Credenciais inválidas! (Dica: admin/admin)");
+      alert("Credenciais inválidas! (Dica: Usamos muito)");
     }
   };
 
