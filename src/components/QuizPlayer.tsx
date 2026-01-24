@@ -24,7 +24,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
 
   // Timer State (in seconds)
   const [timeLeft, setTimeLeft] = useState<number | null>(
-    quiz.timeLimit ? quiz.timeLimit * 60 : null
+    quiz.timeLimit ? quiz.timeLimit * 60 : null,
   );
 
   // Shuffle logic on mount
@@ -64,7 +64,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     const handleVisibilityChange = () => {
       if (document.hidden) {
         alert(
-          "⚠️ Mudança de aba detectada! A pergunta foi pulada como penalidade."
+          "⚠️ Mudança de aba detectada! A pergunta foi pulada como penalidade.",
         );
 
         const newAnswers = [...answers];
@@ -96,7 +96,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
         // And previously: "avise o usuario, caso ele confirme que quer sair, penalize"
 
         const confirmed = window.alert(
-          "⚠️ ALERTA DE FOCO ⚠️\n\nVocê tirou o mouse da janela do quiz. Isso é considerado suspeito.\n\nPor motivos de didática, a pergunta será penalizada."
+          "⚠️ ALERTA DE FOCO ⚠️\n\nVocê tirou o mouse da janela do quiz. Isso é considerado suspeito.\n\nPor motivos de didática, a pergunta será penalizada.",
         );
 
         const newAnswers = [...answers];
@@ -128,6 +128,14 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     } else {
       finishQuiz();
     }
+  };
+
+  const restartQuiz = () => {
+    setCurrentIdx(0);
+    setAnswers(new Array(quiz.questions.length).fill(null));
+    setResult(null);
+    setHasStarted(false);
+    setTimeLeft(quiz.timeLimit ? quiz.timeLimit * 60 : null);
   };
 
   const handlePrev = () => {
@@ -186,7 +194,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     } else if (percentage >= 50) {
       message = "Bom esforço! Mas ainda há espaço para melhorar.";
       icon = "fa-thumbs-up";
-      color = "text-indigo-400";
+      color = "text-blue-400";
     } else {
       message = "Continue estudando! Não desista.";
       icon = "fa-book-open";
@@ -201,7 +209,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
             className={`absolute top-0 inset-x-0 h-2 bg-gradient-to-r ${
               percentage >= 70
                 ? "from-emerald-500 to-teal-500"
-                : "from-indigo-500 to-purple-500"
+                : "from-blue-500 to-purple-500"
             }`}
           ></div>
 
@@ -233,7 +241,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
               </p>
               <p
                 className={`text-3xl font-bold ${
-                  percentage >= 70 ? "text-emerald-400" : "text-indigo-400"
+                  percentage >= 70 ? "text-emerald-400" : "text-blue-400"
                 }`}
               >
                 {percentage}%
@@ -241,17 +249,26 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
             </div>
           </div>
 
-          <Button
-            onClick={() => onFinish(result)}
-            className="w-full py-4 text-lg"
-          >
-            {exitLabel}{" "}
-            <i
-              className={`fas ${
-                exitLabel.includes("Voltar") ? "fa-home" : "fa-redo"
-              } ml-2`}
-            ></i>
-          </Button>
+          <div className="flex gap-4">
+            <Button
+              onClick={() => onFinish(result)}
+              className="w-full py-4 text-lg"
+            >
+              {exitLabel}{" "}
+              <i
+                className={`fas ${
+                  exitLabel.includes("Voltar") ? "fa-home" : "fa-redo"
+                } ml-2`}
+              ></i>
+            </Button>
+            <Button
+              onClick={() => restartQuiz()}
+              className="w-full py-4 text-lg bg-orange-700 hover:bg-orange-800"
+            >
+              Reiniciar Quiz
+              <i className={`fas fa-redo ml-2`}></i>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -277,7 +294,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
 
           <div className="space-y-4 mb-8">
             <div className="flex gap-4 items-start bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <i className="fas fa-eye text-indigo-500 mt-1"></i>
+              <i className="fas fa-eye text-blue-500 mt-1"></i>
               <div>
                 <h4 className="font-bold text-slate-200 text-sm">
                   Foco na Janela
@@ -290,7 +307,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
               </div>
             </div>
             <div className="flex gap-4 items-start bg-slate-950 p-4 rounded-xl border border-slate-800">
-              <i className="fas fa-mouse-pointer text-indigo-500 mt-1"></i>
+              <i className="fas fa-mouse-pointer text-blue-500 mt-1"></i>
               <div>
                 <h4 className="font-bold text-slate-200 text-sm">
                   Cursor na Tela
@@ -305,7 +322,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
 
           <div className="space-y-3">
             <Button
-              className="w-full py-4 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+              className="w-full bg-green-700 py-4 shadow-none hover:scale-105 transition-all duration-200 text-white border-green-500/30 hover:bg-green-500/80"
               onClick={() => setHasStarted(true)}
             >
               ENTENDI, INICIAR QUIZ
@@ -338,7 +355,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
       <div className="mb-10">
         {/* ... (progress bars kept same) */}
         <div className="flex justify-between items-end mb-3">
-          <span className="text-xs font-black text-indigo-500 uppercase tracking-widest">
+          <span className="text-xs font-black text-blue-500 uppercase tracking-widest">
             Pergunta {currentIdx + 1} de {shuffledQuestions.length}
           </span>
           <span className="text-sm font-bold text-slate-400">
@@ -347,7 +364,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
         </div>
         <div className="h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800">
           <div
-            className="h-full bg-indigo-600 transition-all duration-500 ease-out shadow-[0_0_15px_rgba(79,70,229,0.5)]"
+            className="h-full bg-blue-600 transition-all duration-500 ease-out shadow-[0_0_15px_rgba(79,70,229,0.5)]"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -371,7 +388,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
                   w-full text-left p-5 rounded-2xl border-2 transition-all duration-200 flex items-center group
                   ${
                     isSelected
-                      ? "bg-indigo-600/10 border-indigo-500 text-indigo-400"
+                      ? "bg-blue-600/10 border-blue-500 text-blue-400"
                       : "bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200"
                   }
                 `}
@@ -381,7 +398,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
                   w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs mr-4 transition-colors
                   ${
                     isSelected
-                      ? "bg-indigo-500 text-white"
+                      ? "bg-blue-500 text-white"
                       : "bg-slate-800 text-slate-500 group-hover:bg-slate-700 group-hover:text-slate-300"
                   }
                 `}
@@ -390,7 +407,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
                 </span>
                 <span className="font-medium">{option.text}</span>
                 {isSelected && (
-                  <i className="fas fa-check-circle ml-auto text-indigo-500"></i>
+                  <i className="fas fa-check-circle ml-auto text-blue-500"></i>
                 )}
               </button>
             );

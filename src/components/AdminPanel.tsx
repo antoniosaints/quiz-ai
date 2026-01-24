@@ -119,7 +119,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </label>
               <input
                 type="text"
-                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-blue-500 transition-colors"
                 value={editingQuiz.title}
                 onChange={(e) =>
                   setEditingQuiz({ ...editingQuiz, title: e.target.value })
@@ -132,7 +132,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 Descrição
               </label>
               <textarea
-                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-indigo-500 transition-colors h-24 resize-none"
+                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-blue-500 transition-colors h-24 resize-none"
                 value={editingQuiz.description}
                 onChange={(e) =>
                   setEditingQuiz({
@@ -149,7 +149,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </label>
               <input
                 type="text"
-                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-blue-500 transition-colors"
                 value={editingQuiz.category}
                 onChange={(e) =>
                   setEditingQuiz({ ...editingQuiz, category: e.target.value })
@@ -164,7 +164,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <input
                 type="number"
                 min="0"
-                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl outline-none focus:border-blue-500 transition-colors"
                 value={editingQuiz.timeLimit || ""}
                 onChange={(e) =>
                   setEditingQuiz({
@@ -207,7 +207,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="mb-6 mr-10">
                 <input
                   type="text"
-                  className="w-full bg-transparent border-b border-slate-800 p-2 text-lg font-medium outline-none focus:border-indigo-500"
+                  className="w-full bg-transparent border-b border-slate-800 p-2 text-lg font-medium outline-none focus:border-blue-500"
                   placeholder="Digite o enunciado da pergunta..."
                   value={q.text}
                   onChange={(e) => {
@@ -284,27 +284,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
-      <section className="bg-indigo-600 p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
-        <div className="relative z-10 max-w-lg">
-          <h2 className="text-3xl font-black mb-3 italic">MAGIC GENERATOR</h2>
-          <p className="text-indigo-100 mb-8 opacity-90 leading-relaxed font-medium">
+      <section className="bg-blue-600 p-10 rounded-3xl text-white relative overflow-hidden shadow-2xl shadow-blue-500/20">
+        <div className="relative z-10">
+          <h2 className="text-3xl font-black mb-3">Gerador com IA</h2>
+          <p className="text-blue-100 mb-8 opacity-90 leading-relaxed font-medium">
             Use nossa inteligência artificial para criar um quiz completo em
             segundos. Basta digitar o tema!
           </p>
-          <div className="flex flex-col md:flex-row gap-3">
+          <div className="grid grid-cols-12 gap-3">
             <input
               type="text"
               placeholder="Ex: Biologia Marinha, Império Romano..."
-              className="flex-1 bg-white/10 border border-white/20 p-4 rounded-2xl outline-none placeholder:text-indigo-200 focus:bg-white/20 transition-all text-white font-bold"
+              className="col-span-9 bg-white/10 border border-white/20 p-4 rounded-2xl outline-none placeholder:text-blue-200 focus:bg-white/20 transition-all text-white font-bold"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
             <Button
-              className="bg-white text-indigo-600 hover:bg-slate-100 h-full"
+              className="col-span-3 bg-white text-blue-600 hover:bg-slate-100 h-full"
               isLoading={isGenerating}
               onClick={handleGenerateAI}
             >
-              GERAR COM AI
+              GERAR COM IA
             </Button>
           </div>
         </div>
@@ -325,10 +325,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {quizzes.map((q) => (
             <div
               key={q.id}
-              className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between group hover:border-indigo-500/30 transition-all"
+              className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-center justify-between group hover:border-blue-500/30 transition-all"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-950 rounded-xl flex items-center justify-center text-indigo-500 font-bold border border-slate-800">
+                <div className="w-12 h-12 bg-slate-950 rounded-xl flex items-center justify-center text-blue-500 font-bold border border-slate-800">
                   {q.questions.length}
                 </div>
                 <div>
@@ -341,7 +341,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <div className="flex gap-2">
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="md"
                   onClick={() => handleEdit(q)}
                   title="Editar"
                 >
@@ -349,8 +349,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </Button>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="hover:text-rose-500"
+                  size="md"
+                  className="hover:text-red-500"
                   onClick={() => handleDelete(q.id)}
                   title="Excluir"
                 >

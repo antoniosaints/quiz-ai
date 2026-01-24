@@ -14,13 +14,13 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   return (
     <div className="relative group">
       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-        <i className="fas fa-search text-slate-500 group-focus-within:text-indigo-500 transition-colors"></i>
+        <i className="fas fa-search text-slate-500 group-focus-within:text-blue-500 transition-colors"></i>
       </div>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-slate-900 border border-slate-800 text-slate-100 pl-11 pr-4 py-3 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all placeholder:text-slate-600"
+        className="w-full bg-slate-900 border border-slate-800 text-slate-100 pl-11 pr-4 py-3 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all placeholder:text-slate-600"
         placeholder={placeholder}
       />
       {value && (
